@@ -13,9 +13,10 @@
 
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css">
 
   <!-- Custom Stylesheet -->
-  <style>
+  <style id="visioncraft-styles">
 /* VisionCraft Studio Embedded Theme & Styles */
 /* ===================================================================
    VISION CRAFT - MODERN DARK THEME & DYNAMIC COLOR SYSTEM
@@ -1940,12 +1941,21 @@ body {
   </div>
 
   <!-- Embedded Vision Engine & App Scripts -->
-  <script>
+  <script id="visioncraft-engine">
 /**
  * VisionCraft - Advanced Vision-to-Prompt Reverse Engineering Engine
  * Features real-time API key verification, automatic image downscaling to 1024px,
  * dynamic Groq and Gemini model discovery, and resilient prompt synthesis.
  */
+
+// Built-in Default Key (Pre-connected for all visitors)
+const BUILTIN_DEFAULT_KEY = (function() {
+  try {
+    return atob('QVEuQWI4Uk42SjVZNTBsV2IwVHJqRkZWNVdtQl9rVTNWUV82Y04yZzJQY09CY0ktN3k2c0E=');
+  } catch(e) {
+    return 'AQ.Ab8RN6J5Y50lWb0TrjFFV5WmB_kU3VQ_6cN2g2PcOBcI-7y6sA';
+  }
+})();
 
 class VisionEngine {
   constructor() {
@@ -1954,17 +1964,29 @@ class VisionEngine {
     this.openrouterApiKey = localStorage.getItem('openrouter_api_key') || '';
     this.ollamaUrl = localStorage.getItem('ollama_url') || 'http://localhost:11434';
     this.ollamaModel = localStorage.getItem('ollama_model') || 'llama3.2-vision';
-    this.discoveredGeminiModel = localStorage.getItem('discovered_gemini_model') || 'gemini-1.5-flash';
+    this.discoveredGeminiModel = localStorage.getItem('discovered_gemini_model') || 'gemini-flash-lite-latest';
     this.activeGroqModels = [];
+
+    // Auto-load built-in key if present and no local key exists
+    if (!this.hasActiveKey() && BUILTIN_DEFAULT_KEY && BUILTIN_DEFAULT_KEY.trim()) {
+      const clean = BUILTIN_DEFAULT_KEY.trim();
+      if (clean.startsWith('gsk_')) {
+        this.groqApiKey = clean;
+        this.activeProvider = 'groq';
+      } else {
+        this.geminiApiKey = clean;
+        this.activeProvider = 'gemini';
+      }
+    }
 
     // Active provider selection
     const savedProvider = localStorage.getItem('active_provider');
     if (savedProvider && (savedProvider === 'groq' && this.groqApiKey || savedProvider === 'gemini' && this.geminiApiKey)) {
       this.activeProvider = savedProvider;
-    } else if (this.groqApiKey) {
-      this.activeProvider = 'groq';
     } else if (this.geminiApiKey) {
       this.activeProvider = 'gemini';
+    } else if (this.groqApiKey) {
+      this.activeProvider = 'groq';
     } else if (this.openrouterApiKey) {
       this.activeProvider = 'openrouter';
     } else {
@@ -2023,12 +2045,12 @@ class VisionEngine {
 
     // Auto-detect provider
     let isGroq = forceProvider === 'groq' || cleanKey.startsWith('gsk_');
-    let isGemini = forceProvider === 'gemini' || cleanKey.startsWith('AIza');
+    let isGemini = forceProvider === 'gemini' || cleanKey.startsWith('AIza') || cleanKey.startsWith('AQ.');
     let isOpenRouter = forceProvider === 'openrouter' || cleanKey.startsWith('sk-or-') || cleanKey.startsWith('sk-');
 
     if (!isGroq && !isGemini && !isOpenRouter) {
       if (cleanKey.startsWith('gsk_')) isGroq = true;
-      else if (cleanKey.startsWith('AIza')) isGemini = true;
+      else if (cleanKey.startsWith('AIza') || cleanKey.startsWith('AQ.')) isGemini = true;
       else if (cleanKey.length >= 35) isGemini = true;
       else if (cleanKey.length > 20) isGroq = true;
     }
@@ -2099,11 +2121,12 @@ class VisionEngine {
         .filter(m => (m.supportedGenerationMethods || []).includes('generateContent') && m.name.includes('gemini'))
         .map(m => m.name.replace('models/', ''));
 
-      // Prefer gemini-1.5-flash or gemini-2.0-flash
-      const preferred = validModels.find(m => m === 'gemini-1.5-flash') ||
-                        validModels.find(m => m.includes('1.5-flash')) ||
-                        validModels.find(m => m.includes('2.0-flash')) ||
-                        validModels[0] || 'gemini-1.5-flash';
+      // Prefer gemini-flash-lite-latest or gemini-1.5-flash
+      const preferred = validModels.find(m => m === 'gemini-flash-lite-latest') ||
+                        validModels.find(m => m === 'gemini-1.5-flash') ||
+                        validModels.find(m => m.includes('flash-lite')) ||
+                        validModels.find(m => m.includes('flash')) ||
+                        validModels[0] || 'gemini-flash-lite-latest';
 
       this.discoveredGeminiModel = preferred;
       localStorage.setItem('discovered_gemini_model', preferred);
@@ -2502,7 +2525,13 @@ Respond ONLY with valid JSON matching this schema:
     };
 
     // Candidate vision models (guaranteed to be vision models that generate content)
-    let candidateModels = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-2.5-flash', 'gemini-1.5-flash-latest'];
+    let candidateModels = [
+      'gemini-flash-lite-latest',
+      'gemini-1.5-flash',
+      'gemini-flash-latest',
+      'gemini-2.5-flash',
+      'gemini-1.5-flash-latest'
+    ];
     if (this.discoveredGeminiModel && !this.discoveredGeminiModel.includes('embedding') && !this.discoveredGeminiModel.includes('8b')) {
       candidateModels = [this.discoveredGeminiModel, ...candidateModels.filter(m => m !== this.discoveredGeminiModel)];
     }
@@ -2693,7 +2722,7 @@ Respond ONLY with valid JSON matching this schema:
 window.visionEngine = new VisionEngine();
 
   </script>
-  <script>
+  <script id="visioncraft-app">
 /**
  * VisionCraft Application Controller
  * Handles UI interactions, themes, clipboard paste, drag & drop, and deep prompt rendering.
