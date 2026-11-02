@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+
+# Operating System
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# VS Code User State
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
+
+# Local Environment & Secrets
+.env
+.env.local
+*.log

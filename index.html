@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VisionCraft AI - Reverse Image-to-Prompt Studio</title>
+  <meta name="description" content="Transcript any photo or screenshot into exact master AI prompts for Midjourney, FLUX, SDXL, and DALL-E with deep visual breakdown.">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Ambient Glow & Pattern Background -->
+  <div class="ambient-background">
+    <div class="ambient-orb orb-1"></div>
+    <div class="ambient-orb orb-2"></div>
+    <div class="ambient-orb orb-3"></div>
+  </div>
+  <div class="grid-overlay"></div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Main App Wrapper -->
+  <div class="app-container">
+
+    <!-- Navbar / Header -->
+    <header class="navbar">
+      <div class="brand-wrapper">
+        <div class="logo-badge">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </div>
+        <div class="brand-text">
+          <h1>VisionCraft <span class="brand-badge">STUDIO</span></h1>
+        </div>
+      </div>
+
+      <!-- Navigation & Custom Theme Controls -->
+      <div class="nav-actions">
+        <!-- Theme Presets & Dynamic Color Picker -->
+        <div class="theme-picker-group">
+          <button class="color-swatch-btn active" data-theme="cyber" style="background: #8b5cf6;" title="Cyber Violet"></button>
+          <button class="color-swatch-btn" data-theme="emerald" style="background: #10b981;" title="Emerald Matrix"></button>
+          <button class="color-swatch-btn" data-theme="sunset" style="background: #f97316;" title="Sunset Blaze"></button>
+          <button class="color-swatch-btn" data-theme="violet" style="background: #a855f7;" title="Neon Purple"></button>
+          <button class="color-swatch-btn" data-theme="arctic" style="background: #0ea5e9;" title="Arctic Cyan"></button>
+          
+          <!-- Custom Color Picker Tool -->
+          <div class="custom-color-input-wrapper" title="Pick any custom accent color">
+            <input type="color" id="custom-color-picker" value="#8b5cf6">
+          </div>
+        </div>
+
+        <!-- Settings Button -->
+        <button class="btn-icon" id="settings-btn" title="Engine & API Settings">
+          <i class="fa-solid fa-gear"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- AI Vision Status / Quick Connect Banner -->
+    <section class="ai-status-banner" id="ai-status-banner">
+      <div class="ai-status-left">
+        <div class="ai-status-icon inactive" id="ai-status-icon">
+          <i class="fa-solid fa-bolt"></i>
+        </div>
+        <div class="ai-status-text">
+          <h4 id="ai-status-title">AI Vision Status: Not Connected</h4>
+          <p id="ai-status-desc">Paste your free Google Gemini (AIza...) or Groq (gsk_...) key to recognize exact clothing, people, faces, and scenes.</p>
+        </div>
+      </div>
+
+      <!-- State 1: Input group (always remains in DOM, toggled via style.display) -->
+      <div class="ai-status-right" id="banner-input-group">
+        <input type="password" id="banner-key-input" class="key-quick-input" placeholder="Paste Key (AIza... or gsk_...)" autocomplete="off">
+        <button class="btn-small btn-small-primary" id="banner-save-btn">
+          <i class="fa-solid fa-link"></i> Connect
+        </button>
+        <button class="btn-small btn-small-link" id="banner-options-btn" title="API Key Setup & Free Key Links">
+          <i class="fa-solid fa-sliders"></i> Keys Setup
+        </button>
+      </div>
+
+      <!-- State 2: Connected group (always remains in DOM, toggled via style.display) -->
+      <div class="ai-status-right" id="banner-connected-group" style="display: none;">
+        <span class="badge-connected" id="banner-connected-badge">
+          <i class="fa-solid fa-circle-check"></i> <span id="banner-connected-text">AI Vision Active</span>
+        </span>
+        <button class="btn-small btn-small-secondary" id="banner-change-btn">
+          <i class="fa-solid fa-pen"></i> Change Key
+        </button>
+        <button class="btn-small btn-small-danger" id="banner-disconnect-btn" title="Disconnect API Key">
+          <i class="fa-solid fa-power-off"></i> Disconnect
+        </button>
+      </div>
+    </section>
+
+    <!-- Hero Introduction -->
+    <section class="hero-section">
+      <div class="hero-pill">
+        <span class="hero-pill-dot"></span>
+        <span>Deep Visual Reverse-Engineering Studio</span>
+      </div>
+      <h2 class="hero-title">
+        Extract The <span class="gradient-text">Exact AI Prompt</span> From Any Photo
+      </h2>
+      <p class="hero-desc">
+        Drop any screenshot or photo. VisionCraft analyzes the exact subject, posture, clothing, optics, lighting atmosphere, background setting, and color harmony. Copy the prompt directly into any AI to regenerate the identical photo.
+      </p>
+    </section>
+
+    <!-- Main Studio Workspace Grid -->
+    <main class="workspace-grid">
+
+      <!-- LEFT COLUMN: Image Input & Visual Analyzer -->
+      <section class="panel-card input-panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <i class="fa-solid fa-image"></i>
+            <span>Visual Input</span>
+          </div>
+          <span class="upload-kbd"><i class="fa-regular fa-clipboard"></i> Ctrl + V to Paste</span>
+        </div>
+
+        <!-- Drag & Drop Zone -->
+        <div class="dropzone-container" id="dropzone">
+          <input type="file" id="file-input" accept="image/*" style="display: none;">
+          <div class="dropzone-content">
+            <div class="upload-icon-circle">
+              <i class="fa-solid fa-cloud-arrow-up"></i>
+            </div>
+            <div class="upload-instruction">Drop your photo or screenshot here</div>
+            <div class="upload-subtext">Supports PNG, JPG, WEBP, or direct clipboard paste (Ctrl + V)</div>
+          </div>
+        </div>
+
+        <!-- Image Preview Container (Hidden initially) -->
+        <div class="preview-container" id="preview-container">
+          <div class="preview-wrapper">
+            <img id="preview-img" class="preview-img" alt="Uploaded Preview">
+            <button class="remove-img-btn" id="remove-img-btn" title="Remove image">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+
+          <!-- Metadata Badges -->
+          <div class="metadata-row">
+            <span class="meta-pill" id="meta-dimensions"><i class="fa-solid fa-expand"></i> Dimensions</span>
+            <span class="meta-pill" id="meta-aspect"><i class="fa-solid fa-crop-simple"></i> Aspect Ratio</span>
+            <span class="meta-pill" id="meta-lighting"><i class="fa-solid fa-sun"></i> Lighting Mood</span>
+          </div>
+
+          <!-- Color Palette Extraction Bar -->
+          <div class="palette-section" id="palette-section">
+            <div class="palette-label">
+              <span>Extracted Dominant Palette</span>
+              <span style="font-weight: 400; text-transform: none;">Click to copy HEX</span>
+            </div>
+            <div class="palette-swatches" id="palette-swatches"></div>
+          </div>
+
+          <!-- User Optional Focus / Hint Input -->
+          <div class="user-hint-container">
+            <label class="user-hint-label">
+              <i class="fa-solid fa-pen-nib"></i> What is in your photo? (e.g. "Boat on lake under starry sky with Milky Way"):
+            </label>
+            <input type="text" id="user-hint-input" class="user-hint-input" placeholder="Type what's in your photo, or leave empty for auto-detection">
+          </div>
+        </div>
+
+        <!-- Action Button -->
+        <button class="btn-primary-action" id="analyze-btn" disabled>
+          <div class="btn-shimmer"></div>
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+          <span>Deconstruct & Transcript Image</span>
+        </button>
+
+        <!-- One-Click Sample Images -->
+        <div class="sample-images-section">
+          <div class="sample-title">Or Try A Sample Image:</div>
+          <div class="sample-grid">
+            <div class="sample-thumbnail" data-src="https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&auto=format&fit=crop&q=80" title="Cyberpunk Portrait">
+              <img src="https://images.unsplash.com/photo-1578632767115-351597cf2477?w=150&auto=format&fit=crop&q=60" alt="Cyberpunk Portrait">
+            </div>
+            <div class="sample-thumbnail" data-src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80" title="Sci-Fi Neon Architecture">
+              <img src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=150&auto=format&fit=crop&q=60" alt="Neon Architecture">
+            </div>
+            <div class="sample-thumbnail" data-src="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=600&auto=format&fit=crop&q=80" title="Ethereal Nature Landscape">
+              <img src="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=150&auto=format&fit=crop&q=60" alt="Ethereal Landscape">
+            </div>
+            <div class="sample-thumbnail" data-src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop&q=80" title="Abstract Fluid 3D">
+              <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=60" alt="Fluid 3D Render">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT COLUMN: Deep Prompt Results & Deconstruction -->
+      <section class="panel-card results-panel" id="results-panel">
+        
+        <!-- Empty State Initial View -->
+        <div class="empty-state" id="empty-state">
+          <i class="fa-solid fa-crosshairs empty-icon"></i>
+          <h3>Ready to Reverse-Engineer</h3>
+          <p>Drop your photo on the left and click "Deconstruct & Transcript Image" to generate your exact AI prompt.</p>
+        </div>
+
+        <!-- Loading State Overlay -->
+        <div class="loading-overlay" id="loading-overlay">
+          <div class="spinner-glow"></div>
+          <div class="loading-text">Deeply Analyzing Every Detail In Your Image...</div>
+          <div class="loading-subtext">Recognizing subject anatomy, clothes, optics, lighting & environment</div>
+        </div>
+
+        <!-- API Error Alert Box (Visible only if API reports an issue) -->
+        <div class="api-error-card" id="api-error-card" style="display: none;">
+          <div class="error-card-header">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span id="api-error-title">AI Vision Status</span>
+          </div>
+          <p id="api-error-msg" class="error-card-body"></p>
+          <div class="error-card-actions">
+            <button class="btn-small btn-small-primary" id="error-fix-key-btn">
+              <i class="fa-solid fa-key"></i> Update / Re-enter API Key
+            </button>
+          </div>
+        </div>
+
+        <!-- Results Container (Shown when analysis is complete) -->
+        <div id="results-container" style="display: none; flex-direction: column; gap: 1.25rem;">
+          
+          <!-- Results Tabs -->
+          <div class="results-tabs">
+            <button class="tab-btn active" data-tab="tab-master">
+              <i class="fa-solid fa-crown"></i> Master AI Prompt
+            </button>
+            <button class="tab-btn" data-tab="tab-breakdown">
+              <i class="fa-solid fa-microscope"></i> Deep Breakdown
+            </button>
+            <button class="tab-btn" data-tab="tab-platforms">
+              <i class="fa-solid fa-cubes"></i> Platform Formats
+            </button>
+            <button class="tab-btn" data-tab="tab-json">
+              <i class="fa-solid fa-code"></i> JSON Data
+            </button>
+          </div>
+
+          <!-- TAB 1: MASTER PROMPT -->
+          <div class="tab-pane active" id="tab-master">
+            <div class="master-prompt-box">
+              <div class="prompt-actions-bar">
+                <span class="prompt-badge"><i class="fa-solid fa-check-double"></i> Ready to Copy-Paste On Any AI</span>
+                <button class="copy-btn" id="copy-master-btn">
+                  <i class="fa-regular fa-clone"></i> Copy Master Prompt
+                </button>
+              </div>
+              <div class="master-prompt-text" id="master-prompt-text">
+                Prompt will be synthesized here...
+              </div>
+
+              <!-- Quick Platform Copy Shortcuts -->
+              <div class="platform-buttons-row">
+                <button class="platform-pill-btn copy-platform-btn" data-target="mj-code" data-platform="Midjourney">
+                  <i class="fa-solid fa-robot"></i> Copy Midjourney v6
+                </button>
+                <button class="platform-pill-btn copy-platform-btn" data-target="flux-code" data-platform="FLUX.1">
+                  <i class="fa-solid fa-bolt"></i> Copy FLUX.1
+                </button>
+                <button class="platform-pill-btn copy-platform-btn" data-target="sdxl-code" data-platform="SDXL">
+                  <i class="fa-solid fa-sliders"></i> Copy SDXL
+                </button>
+                <button class="platform-pill-btn copy-platform-btn" data-target="dalle-code" data-platform="DALL-E 3">
+                  <i class="fa-solid fa-palette"></i> Copy DALL-E 3
+                </button>
+              </div>
+
+              <!-- Direct 1-Click AI Test Links -->
+              <div class="direct-ai-launch-row">
+                <span class="launch-label">Direct Paste In:</span>
+                <a href="https://chatgpt.com/" target="_blank" class="platform-pill-btn" title="Open ChatGPT / DALL-E 3">
+                  <i class="fa-solid fa-arrow-up-right-from-square"></i> ChatGPT / DALL-E
+                </a>
+                <a href="https://fal.ai/models/fal-ai/flux/dev" target="_blank" class="platform-pill-btn" title="Open FLUX.1 Generator">
+                  <i class="fa-solid fa-arrow-up-right-from-square"></i> FLUX Web
+                </a>
+                <a href="https://www.bing.com/images/create" target="_blank" class="platform-pill-btn" title="Open Bing Image Creator">
+                  <i class="fa-solid fa-arrow-up-right-from-square"></i> Bing Create
+                </a>
+                <a href="https://discord.com/channels/@me" target="_blank" class="platform-pill-btn" title="Open Midjourney on Discord">
+                  <i class="fa-solid fa-arrow-up-right-from-square"></i> Midjourney
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 2: DEEP EXPLAINED BREAKDOWN -->
+          <div class="tab-pane" id="tab-breakdown">
+            <div class="deep-breakdown-grid">
+              
+              <!-- Subject & Wardrobe -->
+              <div class="breakdown-card">
+                <div class="breakdown-card-header">
+                  <i class="fa-solid fa-user-astronaut"></i>
+                  <span>Subject & Anatomy</span>
+                </div>
+                <div class="breakdown-card-content" id="breakdown-subject">--</div>
+              </div>
+
+              <!-- Art Style & Render Engine -->
+              <div class="breakdown-card">
+                <div class="breakdown-card-header">
+                  <i class="fa-solid fa-paintbrush"></i>
+                  <span>Style, Medium & Engine</span>
+                </div>
+                <div class="breakdown-card-content" id="breakdown-style">--</div>
+              </div>
+
+              <!-- Camera & Lens Optics -->
+              <div class="breakdown-card">
+                <div class="breakdown-card-header">
+                  <i class="fa-solid fa-camera"></i>
+                  <span>Camera Optics & Angle</span>
+                </div>
+                <div class="breakdown-card-content" id="breakdown-camera">--</div>
+              </div>
+
+              <!-- Lighting & Atmosphere -->
+              <div class="breakdown-card">
+                <div class="breakdown-card-header">
+                  <i class="fa-solid fa-lightbulb"></i>
+                  <span>Lighting & Atmosphere</span>
+                </div>
+                <div class="breakdown-card-content" id="breakdown-lighting">--</div>
+              </div>
+
+              <!-- Environment & Scenery -->
+              <div class="breakdown-card">
+                <div class="breakdown-card-header">
+                  <i class="fa-solid fa-mountain-sun"></i>
+                  <span>Environment & Background</span>
+                </div>
+                <div class="breakdown-card-content" id="breakdown-environment">--</div>
+              </div>
+
+              <!-- Color Grading -->
+              <div class="breakdown-card">
+                <div class="breakdown-card-header">
+                  <i class="fa-solid fa-swatchbook"></i>
+                  <span>Color Grading & Palette</span>
+                </div>
+                <div class="breakdown-card-content" id="breakdown-color">--</div>
+              </div>
+
+              <!-- Negative Prompt (Full Width) -->
+              <div class="breakdown-card" style="grid-column: span 2;">
+                <div class="breakdown-card-header" style="color: #f43f5e;">
+                  <i class="fa-solid fa-ban" style="color: #f43f5e;"></i>
+                  <span>Negative Prompt (Avoid Hallucinations & Distortions)</span>
+                </div>
+                <div class="breakdown-card-content" id="breakdown-negative">--</div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- TAB 3: PLATFORM SPECIFIC FORMATS -->
+          <div class="tab-pane" id="tab-platforms">
+            
+            <!-- Midjourney v6.1 -->
+            <div class="platform-card">
+              <div class="platform-header">
+                <div class="platform-name">
+                  <i class="fa-solid fa-compass" style="color: #8b5cf6;"></i>
+                  <span>Midjourney v6.1</span>
+                </div>
+                <button class="copy-btn copy-platform-btn" data-target="mj-code" data-platform="Midjourney">
+                  <i class="fa-regular fa-clone"></i> Copy
+                </button>
+              </div>
+              <div class="platform-code" id="mj-code">--</div>
+            </div>
+
+            <!-- FLUX.1 (Dev / Schnell) -->
+            <div class="platform-card">
+              <div class="platform-header">
+                <div class="platform-name">
+                  <i class="fa-solid fa-bolt" style="color: #06b6d4;"></i>
+                  <span>FLUX.1 (Schnell / Dev)</span>
+                </div>
+                <button class="copy-btn copy-platform-btn" data-target="flux-code" data-platform="FLUX.1">
+                  <i class="fa-regular fa-clone"></i> Copy
+                </button>
+              </div>
+              <div class="platform-code" id="flux-code">--</div>
+            </div>
+
+            <!-- Stable Diffusion XL -->
+            <div class="platform-card">
+              <div class="platform-header">
+                <div class="platform-name">
+                  <i class="fa-solid fa-sliders" style="color: #10b981;"></i>
+                  <span>Stable Diffusion XL (SDXL)</span>
+                </div>
+                <button class="copy-btn copy-platform-btn" data-target="sdxl-code" data-platform="SDXL">
+                  <i class="fa-regular fa-clone"></i> Copy
+                </button>
+              </div>
+              <div class="platform-code" id="sdxl-code">--</div>
+            </div>
+
+            <!-- DALL-E 3 -->
+            <div class="platform-card">
+              <div class="platform-header">
+                <div class="platform-name">
+                  <i class="fa-solid fa-palette" style="color: #f59e0b;"></i>
+                  <span>DALL-E 3 / Bing Image Creator</span>
+                </div>
+                <button class="copy-btn copy-platform-btn" data-target="dalle-code" data-platform="DALL-E 3">
+                  <i class="fa-regular fa-clone"></i> Copy
+                </button>
+              </div>
+              <div class="platform-code" id="dalle-code">--</div>
+            </div>
+
+          </div>
+
+          <!-- TAB 4: RAW JSON DATA -->
+          <div class="tab-pane" id="tab-json">
+            <div class="platform-card">
+              <div class="platform-header">
+                <div class="platform-name">
+                  <i class="fa-solid fa-code"></i>
+                  <span>Full Structured JSON</span>
+                </div>
+                <button class="copy-btn copy-platform-btn" data-target="json-code" data-platform="JSON">
+                  <i class="fa-regular fa-clone"></i> Copy JSON
+                </button>
+              </div>
+              <div class="platform-code" id="json-code" style="max-height: 400px; overflow-y: auto;">{}</div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+
+  </div>
+
+  <!-- Settings & API Key Modal -->
+  <div class="modal-backdrop" id="settings-modal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i class="fa-solid fa-sliders"></i>
+          <span>Vision Engine Setup</span>
+        </div>
+        <button class="btn-icon" id="close-modal-btn">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div style="background: rgba(139, 92, 246, 0.12); border: 1px solid var(--border-accent); border-radius: var(--radius-sm); padding: 0.85rem; font-size: 0.83rem; line-height: 1.5;">
+          <strong>⚡ How Real Image Recognition Works:</strong><br>
+          To tell <em>everything</em> from your photo (exact clothes, people, faces, and scenes), VisionCraft connects to a free vision model.
+          Google gives Gemini Flash <strong>100% Free</strong> forever (15 images/minute & 1M tokens/day) with <strong>no credit card</strong>!
+        </div>
+
+        <!-- Status & Feedback Area in Modal -->
+        <div id="modal-status-msg" style="display: none; padding: 0.75rem; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 500;"></div>
+
+        <!-- Gemini Key -->
+        <div class="form-group">
+          <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
+            <span><i class="fa-brands fa-google"></i> Option 1: Google Gemini API Key (100% Free)</span>
+            <span id="gemini-active-badge" style="display: none; font-size: 0.75rem; color: var(--success); font-weight: 700;">🟢 Active</span>
+          </label>
+          <input type="password" id="gemini-key-input" class="form-input" placeholder="AIzaSy...">
+          <div class="form-help">
+            👉 <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: var(--primary); font-weight: 700;">Get Free Gemini Key (Google AI Studio)</a>. (Select <strong>"Create API key in new project"</strong> so the Generative Language API is automatically active).
+          </div>
+        </div>
+
+        <!-- Groq Key -->
+        <div class="form-group">
+          <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
+            <span><i class="fa-solid fa-bolt" style="color: #06b6d4;"></i> Option 2: Groq Vision Key (Recommended - 100% Free & No Setup!)</span>
+            <span id="groq-active-badge" style="display: none; font-size: 0.75rem; color: var(--success); font-weight: 700;">🟢 Active</span>
+          </label>
+          <input type="password" id="groq-key-input" class="form-input" placeholder="gsk_...">
+          <div class="form-help">
+            👉 <a href="https://console.groq.com/keys" target="_blank" style="color: var(--secondary); font-weight: 700;">Click here to get Free Groq Key</a>. Takes 10 seconds, uses Meta LLaMA 3.2 Vision / Qwen 27B Vision, and works with 0 errors!
+          </div>
+        </div>
+
+        <!-- Ollama Config -->
+        <div class="form-group">
+          <label class="form-label">
+            <i class="fa-solid fa-server"></i> Or Local Offline Ollama URL
+          </label>
+          <input type="text" id="ollama-url-input" class="form-input" placeholder="http://localhost:11434">
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+        <button class="btn-small-danger" id="modal-clear-keys-btn" title="Remove all saved API keys">
+          <i class="fa-solid fa-trash-can"></i> Clear All Keys
+        </button>
+        <div style="display: flex; gap: 0.75rem;">
+          <button class="btn-secondary" id="cancel-modal-btn" onclick="document.getElementById('settings-modal').style.display='none'">Cancel</button>
+          <button class="btn-primary-action" id="save-settings-btn" style="width: auto; margin-top: 0; padding: 0.55rem 1.35rem;">
+            <i class="fa-solid fa-link"></i> Save & Connect
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/vision-engine.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
